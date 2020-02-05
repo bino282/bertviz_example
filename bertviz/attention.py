@@ -109,11 +109,11 @@ def get_attention(model, model_type, tokenizer, sentence_a, sentence_b=None, inc
         slice_a = slice(0, len(tokens_a))  # Positions corresponding to sentence A in input
         slice_b = slice(len(tokens_a), len(tokens_a) + len(tokens_b))  # Position corresponding to sentence B in input
     for layer, attn_data in enumerate(attn_data_list):
-        if(layer!=10):
+        if(layer!=9):
             continue
         # Process attention
         attn = attn_data['attn'][0]  # assume batch_size=1; shape = [num_heads, source_seq_len, target_seq_len]
-        attn_dict['all'].append(attn.tolist()[10][11])
+        attn_dict['all'].append(attn.tolist()[9][1])
         if is_sentence_pair:
             # attn_dict['aa'].append(attn[:, slice_a, slice_a].tolist())  # Append A->A attention for layer, across all heads
             # attn_dict['bb'].append(attn[:, slice_b, slice_b].tolist())  # Append B->B attention for layer, across all heads
@@ -159,7 +159,7 @@ def get_attention(model, model_type, tokenizer, sentence_a, sentence_b=None, inc
             #     'right_text': tokens_b
             # },
             'ab': {
-                'attn': [[attn_dict['ab'][0][11]]],
+                'attn': [[attn_dict['ab'][0][1]]],
                 'left_text': tokens_a,
                 'right_text': tokens_b
             },
