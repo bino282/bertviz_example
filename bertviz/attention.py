@@ -69,12 +69,12 @@ def get_attention(model, model_type, tokenizer, sentence_a, sentence_b=None, inc
     token_ids = tokenizer.convert_tokens_to_ids(tokens_a + (tokens_b if tokens_b else []))
     tokens_tensor = torch.tensor(token_ids).unsqueeze(0)
     if(tokens_b and model_type=="bert_fineturn"):
-        max_length = 300
+        max_length = 200
         input_ids = token_ids
         token_type_ids = [0] * len(tokens_a) + [1] * len(tokens_b)
         mask_padding_with_zero = True
         pad_token = 0
-        max_length = 300
+        max_length = 200
         pad_token_segment_id = 0
         attention_mask = [1 if mask_padding_with_zero else 0] * len(input_ids)
 
