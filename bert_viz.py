@@ -39,12 +39,12 @@ def get_pool(model, model_type, tokenizer, sentence_a, sentence_b=None, include_
     token_ids = tokenizer.convert_tokens_to_ids(tokens_a + (tokens_b if tokens_b else []))
     tokens_tensor = torch.tensor(token_ids).unsqueeze(0)
     if(tokens_b and model_type=="bert_fineturn"):
-        max_length = 300
+        max_length = 200
         input_ids = token_ids
         token_type_ids = [0] * len(tokens_a) + [1] * len(tokens_b)
         mask_padding_with_zero = True
         pad_token = 0
-        max_length = 300
+        max_length = 200
         pad_token_segment_id = 0
         attention_mask = [1 if mask_padding_with_zero else 0] * len(input_ids)
 
@@ -63,13 +63,14 @@ def get_pool(model, model_type, tokenizer, sentence_a, sentence_b=None, include_
     model.eval()
     if((token_type_ids is not None) and (tokens_b is not None) and(model_type=='bert_fineturn')):
         #output = model(tokens_tensor,attention_mask=attention_mask,token_type_ids=token_type_ids)
-        output = model.bert(tokens_tensor,attention_mask=attention_mask,token_type_ids=token_type_ids)
+        output = model(tokens_tensor,attention_mask=attention_mask,token_type_ids=token_type_ids)
+        output = torch.nn.Softmax(dim=-1)(output[0])
     elif token_type_ids is not None:
         output = model(tokens_tensor, token_type_ids=token_type_ids)
     else:
         output = model(tokens_tensor)
-    pool_list = output[1]
-    return pool_list
+    # pool_list = output[1]
+    return output
 
 
 model_type = "bert_fineturn"
@@ -77,21 +78,19 @@ MODEL_CLASSES = {
     'bert': (BertForSequenceClassification, BertTokenizer)
 }
 model_class, tokenizer_class = MODEL_CLASSES["bert"]
-tokenizer = tokenizer_class.from_pretrained("bert-base-uncased")
-model = model_class.from_pretrained("../local/model_bert_90.65")
+tokenizer = tokenizer_class.from_pretrained("bert-base-multilingual-cased")
+model = model_class.from_pretrained("../local/bert4ecomerce_mrpc/checkpoint-900")
 model.eval()
 
-fw = open('cls.txt','w',encoding="utf-8")
-with open('test.txt','r',encoding='utf-8') as lines:
+fw = open('test.pred','w',encoding="utf-8")
+with open('test.tsv','r',encoding='utf-8') as lines:
     for line in lines:
         tmp = line.strip().split('\t')
-        sentence_a = tmp[0]
-        sentence_b = tmp[1]
-        print(sentence_a,sentence_b)
-        label = str(tmp[2])
+        sentence_a = tmp[3]
+        sentence_b = tmp[4]
+        label = str(tmp[0])
         pool_list = get_pool(model, model_type, tokenizer, sentence_a, sentence_b)
-        pool_list = pool_list.cpu().detach().numpy().tolist()[0]
-        pool_list = [str(t) for t in pool_list]
-        fw.write("\t".join([label]+pool_list))
+        pool_list = pool_list.cpu().detach().numpy().tolist()
+        fw.write("\t".join([label]+[str(pool_list[0][1])]))
         fw.write("\n")
 fw.close()
